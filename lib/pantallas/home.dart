@@ -877,7 +877,7 @@ class _EstadoPantallaDetalleAcorde extends State<_PantallaDetalleAcorde>
                         : const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [Color(0xFF6B2FFF), morado],
+                            colors: [Color(0xFF5A8A6A), verde],
                           ),
                     color: widget.grabando ? rojo : null,
                     borderRadius: BorderRadius.circular(32),
@@ -951,11 +951,11 @@ class _MicButtonPainter extends CustomPainter {
       paintFondo.color = rojo;
     } else if (activo) {
       paintFondo.shader = RadialGradient(
-        colors: [const Color(0xFF6B2FFF), verde],
+        colors: [const Color(0xFF5A8A6A), verde],
         stops: const [0.0, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: r));
     } else {
-      paintFondo.color = const Color(0xFF1E1E2E);
+      paintFondo.color = const Color(0xFF1A1A1A);
     }
     canvas.drawCircle(center, r, paintFondo);
 

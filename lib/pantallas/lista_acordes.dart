@@ -34,12 +34,34 @@ class PantallaListaAcordes extends StatelessWidget {
     const _DatosModulo(
       numero: '2',
       titulo: 'Acordes básicos',
-      descripcion: 'Aprende A, Am y D — tus primeros acordes',
+      descripcion: 'Aprende C, A, D, E y G — tus primeros acordes',
       videoCount: 5,
       color: Color(0xFF64B5F6),
       thumb: 'assets/banner_acordes.png',
       desbloqueado: false,
       esLocal: true,
+    ),
+    const _DatosModulo(
+      numero: '3',
+      titulo: 'Acordes intermedios',
+      descripcion: 'Am7, B7, Bm, C7, Cadd9, Dm7, Em7, F, Fm, G7',
+      videoCount: 0,
+      color: Color(0xFFE8C547),
+      thumb: 'assets/banner_acordes.png',
+      desbloqueado: false,
+      esLocal: false,
+      proximamente: true,
+    ),
+    const _DatosModulo(
+      numero: '4',
+      titulo: 'Acordes avanzados',
+      descripcion: 'Cejillas, progresiones y técnicas avanzadas',
+      videoCount: 0,
+      color: Color(0xFFE85454),
+      thumb: 'assets/banner_acordes.png',
+      desbloqueado: false,
+      esLocal: false,
+      proximamente: true,
     ),
   ];
 
@@ -137,6 +159,7 @@ class _DatosModulo {
   final String thumb;
   final bool desbloqueado;
   final bool esLocal;
+  final bool proximamente;
 
   const _DatosModulo({
     required this.numero,
@@ -147,6 +170,7 @@ class _DatosModulo {
     required this.thumb,
     this.desbloqueado = false,
     this.esLocal = false,
+    this.proximamente = false,
   });
 }
 
@@ -159,9 +183,9 @@ class _TarjetaModulo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: datos.desbloqueado ? onTap : null,
+      onTap: datos.proximamente ? null : (datos.desbloqueado ? onTap : null),
       child: AnimatedOpacity(
-        opacity: datos.desbloqueado ? 1.0 : 0.55,
+        opacity: datos.proximamente ? 0.45 : (datos.desbloqueado ? 1.0 : 0.55),
         duration: const Duration(milliseconds: 300),
         child: Container(
           decoration: BoxDecoration(
@@ -220,20 +244,47 @@ class _TarjetaModulo extends StatelessWidget {
                                 fontSize: 11,
                                 color: fondo,
                                 fontWeight: FontWeight.w700)))),
-                Positioned(
-                    bottom: 10,
+                if (datos.proximamente)
+                  Positioned(
+                    top: 10,
                     right: 14,
                     child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(8)),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.play_circle_outline_rounded,
-                              color: blanco, size: 12),
-                          const SizedBox(width: 4),
-                          Text('${datos.videoCount} video',
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: datos.color.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.schedule_rounded,
+                            color: datos.color, size: 12),
+                        const SizedBox(width: 4),
+                        Text('Próximamente',
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: datos.color,
+                                fontWeight: FontWeight.w600)),
+                      ]),
+                    ),
+                  ),
+                if (!datos.proximamente)
+                  Positioned(
+                      bottom: 10,
+                      right: 14,
+                      child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(8)),
+                          child:
+                              Row(mainAxisSize: MainAxisSize.min, children: [
+                            const Icon(Icons.play_circle_outline_rounded,
+                                color: blanco, size: 12),
+                            const SizedBox(width: 4),
+                            Text('${datos.videoCount} video',
                               style:
                                   const TextStyle(fontSize: 11, color: blanco)),
                         ]))),

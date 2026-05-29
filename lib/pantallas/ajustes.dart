@@ -133,7 +133,7 @@ class _EstadoAjustes extends State<PantallaAjustes> {
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                     colors: [
-                                      Color(0xFF6B3DFF),
+                                      Color(0xFF5A8A6A),
                                       morado,
                                     ],
                                   ),
@@ -563,7 +563,7 @@ class _Seccion extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [morado, Color(0xFF6B3DFF)],
+                colors: [morado, Color(0xFF5A8A6A)],
               ),
               borderRadius: BorderRadius.circular(2),
               boxShadow: [

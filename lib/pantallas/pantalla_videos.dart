@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../constantes/colores.dart';
+import '../constantes/acordes.dart';
+import '../widgets/reto_acorde.dart';
 
 // ── Modelos ───────────────────────────────────────────────
 
@@ -16,6 +18,7 @@ class VideoModulo {
   final String instructor;
   final String rolInstructor;
   final bool esShort;
+  final String? acordeAsociado; // Acorde que debe tocar el usuario después del video
 
   const VideoModulo({
     required this.titulo,
@@ -27,6 +30,7 @@ class VideoModulo {
     required this.instructor,
     required this.rolInstructor,
     this.esShort = false,
+    this.acordeAsociado,
   });
 }
 
@@ -125,6 +129,7 @@ final _itemsModulo2 = [
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
     esShort: true,
+    acordeAsociado: 'C',
   )),
   const ItemModulo.video(VideoModulo(
     titulo: 'Acorde LA (A)',
@@ -142,6 +147,7 @@ final _itemsModulo2 = [
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
     esShort: true,
+    acordeAsociado: 'A',
   )),
   const ItemModulo.video(VideoModulo(
     titulo: 'Acorde RE (D)',
@@ -159,6 +165,7 @@ final _itemsModulo2 = [
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
     esShort: true,
+    acordeAsociado: 'D',
   )),
   const ItemModulo.video(VideoModulo(
     titulo: 'Acorde MI Mayor (E)',
@@ -176,6 +183,7 @@ final _itemsModulo2 = [
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
     esShort: true,
+    acordeAsociado: 'E',
   )),
   const ItemModulo.video(VideoModulo(
     titulo: 'Acorde SOL (G)',
@@ -193,6 +201,7 @@ final _itemsModulo2 = [
     instructor: 'Sonaris Team',
     rolInstructor: 'Equipo de instructores de guitarra',
     esShort: true,
+    acordeAsociado: 'G',
   )),
 ];
 
@@ -400,12 +409,35 @@ class _EstadoPantallaVideos extends State<PantallaVideos>
                 final video = videos[i].video!;
                 final desbloqueado = _estaDesbloqueado(i);
                 final completado = _completados.contains(video.youtubeId);
+                final esUltimo = i == videos.length - 1;
                 return _TarjetaVideo(
                   video: video,
                   desbloqueado: desbloqueado,
                   completado: completado,
                   indice: i,
                   alCompletar: () => _marcarCompletado(video.youtubeId),
+                  alSiguiente: i < videos.length - 1
+                      ? () {
+                          final siguiente = videos[i + 1].video!;
+                          if (_estaDesbloqueado(i + 1)) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PantallaDetalleVideo(
+                                  video: siguiente,
+                                  alCompletar: () =>
+                                      _marcarCompletado(siguiente.youtubeId),
+                                  alSiguiente: null,
+                                  esUltimoDelModulo: i + 1 == videos.length - 1,
+                                  modulo: widget.modulo,
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      : null,
+                  esUltimoDelModulo: esUltimo,
+                  modulo: widget.modulo,
                 );
               },
             ),
@@ -424,6 +456,9 @@ class _TarjetaVideo extends StatefulWidget {
   final bool completado;
   final int indice;
   final VoidCallback alCompletar;
+  final VoidCallback? alSiguiente;
+  final bool esUltimoDelModulo;
+  final int modulo;
 
   const _TarjetaVideo({
     required this.video,
@@ -431,6 +466,9 @@ class _TarjetaVideo extends StatefulWidget {
     required this.completado,
     required this.indice,
     required this.alCompletar,
+    this.alSiguiente,
+    this.esUltimoDelModulo = false,
+    this.modulo = 1,
   });
 
   @override
@@ -506,6 +544,9 @@ class _EstadoTarjetaVideo extends State<_TarjetaVideo>
                       builder: (_) => PantallaDetalleVideo(
                         video: widget.video,
                         alCompletar: widget.alCompletar,
+                        alSiguiente: widget.alSiguiente,
+                        esUltimoDelModulo: widget.esUltimoDelModulo,
+                        modulo: widget.modulo,
                       ),
                     ),
                   );
@@ -794,11 +835,17 @@ class _EstadoTarjetaVideo extends State<_TarjetaVideo>
 class PantallaDetalleVideo extends StatefulWidget {
   final VideoModulo video;
   final VoidCallback alCompletar;
+  final VoidCallback? alSiguiente;
+  final bool esUltimoDelModulo;
+  final int modulo;
 
   const PantallaDetalleVideo({
     super.key,
     required this.video,
     required this.alCompletar,
+    this.alSiguiente,
+    this.esUltimoDelModulo = false,
+    this.modulo = 1,
   });
 
   @override
@@ -1067,6 +1114,9 @@ class _EstadoPantallaDetalleVideo extends State<PantallaDetalleVideo>
                             builder: (_) => _PantallaReproductor(
                               video: widget.video,
                               alCompletar: widget.alCompletar,
+                              alSiguiente: widget.alSiguiente,
+                              esUltimoDelModulo: widget.esUltimoDelModulo,
+                              modulo: widget.modulo,
                             ),
                           ),
                         ),
@@ -1215,7 +1265,16 @@ class _EstadoBotonReproducir extends State<_BotonReproducir> {
 class _PantallaReproductor extends StatefulWidget {
   final VideoModulo video;
   final VoidCallback alCompletar;
-  const _PantallaReproductor({required this.video, required this.alCompletar});
+  final VoidCallback? alSiguiente;
+  final bool esUltimoDelModulo;
+  final int modulo;
+  const _PantallaReproductor({
+    required this.video,
+    required this.alCompletar,
+    this.alSiguiente,
+    this.esUltimoDelModulo = false,
+    this.modulo = 1,
+  });
 
   @override
   State<_PantallaReproductor> createState() => _EstadoReproductor();
@@ -1237,7 +1296,43 @@ class _EstadoReproductor extends State<_PantallaReproductor> {
   void _escucharEstado() {
     if (_ctrl.value.playerState == PlayerState.ended) {
       widget.alCompletar();
+      // Si el video tiene un acorde asociado, mostrar reto interactivo
+      if (widget.video.acordeAsociado != null) {
+        _mostrarRetoAcorde();
+      } else if (widget.esUltimoDelModulo && widget.modulo == 1) {
+        _mostrarModalAfinacion();
+      }
     }
+  }
+
+  void _mostrarRetoAcorde() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (_) => RetoAcorde(
+        acorde: widget.video.acordeAsociado!,
+        alCompletar: () {
+          // Si es el último del módulo 1, mostrar afinación
+          if (widget.esUltimoDelModulo && widget.modulo == 1) {
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) _mostrarModalAfinacion();
+            });
+          }
+        },
+      ),
+    );
+  }
+
+  void _mostrarModalAfinacion() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _ModalAfinacion(),
+    );
   }
 
   @override
@@ -1250,7 +1345,13 @@ class _EstadoReproductor extends State<_PantallaReproductor> {
   @override
   Widget build(BuildContext context) {
     if (widget.video.esShort) {
-      return _ReproductorShort(ctrl: _ctrl, video: widget.video);
+      return _ReproductorShort(
+        ctrl: _ctrl,
+        video: widget.video,
+        alSiguiente: widget.alSiguiente,
+        esUltimoDelModulo: widget.esUltimoDelModulo,
+        modulo: widget.modulo,
+      );
     }
 
     return YoutubePlayerBuilder(
@@ -1297,16 +1398,41 @@ class _EstadoReproductor extends State<_PantallaReproductor> {
 
 // ── Reproductor Short (formato vertical TikTok) ───────────
 
-class _ReproductorShort extends StatelessWidget {
+class _ReproductorShort extends StatefulWidget {
   final YoutubePlayerController ctrl;
   final VideoModulo video;
-  const _ReproductorShort({required this.ctrl, required this.video});
+  final VoidCallback? alSiguiente;
+  final bool esUltimoDelModulo;
+  final int modulo;
+  const _ReproductorShort({
+    required this.ctrl,
+    required this.video,
+    this.alSiguiente,
+    this.esUltimoDelModulo = false,
+    this.modulo = 1,
+  });
+
+  @override
+  State<_ReproductorShort> createState() => _EstadoReproductorShort();
+}
+
+class _EstadoReproductorShort extends State<_ReproductorShort> {
+  bool _pausado = false;
+
+  void _togglePausa() {
+    setState(() => _pausado = !_pausado);
+    if (_pausado) {
+      widget.ctrl.pause();
+    } else {
+      widget.ctrl.play();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return YoutubePlayerBuilder(
       player: YoutubePlayer(
-        controller: ctrl,
+        controller: widget.ctrl,
         showVideoProgressIndicator: true,
         progressIndicatorColor: verde,
         progressColors: const ProgressBarColors(
@@ -1318,25 +1444,45 @@ class _ReproductorShort extends StatelessWidget {
         backgroundColor: Colors.black,
         body: Stack(fit: StackFit.expand, children: [
           // Video a pantalla completa vertical
-          Center(
-            child: AspectRatio(
-              aspectRatio: 9 / 16,
-              child: player,
+          GestureDetector(
+            onTap: _togglePausa,
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: 9 / 16,
+                child: player,
+              ),
             ),
           ),
+
+          // Ícono de pausa central (aparece al pausar)
+          if (_pausado)
+            Center(
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.play_arrow_rounded,
+                    color: Colors.white, size: 40),
+              ),
+            ),
 
           // Overlay superior con gradiente
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: Container(
-              height: 120,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.black, Colors.transparent],
+            child: IgnorePointer(
+              child: Container(
+                height: 120,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.black, Colors.transparent],
+                  ),
                 ),
               ),
             ),
@@ -1347,13 +1493,15 @@ class _ReproductorShort extends StatelessWidget {
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
-              height: 200,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Colors.black, Colors.transparent],
+            child: IgnorePointer(
+              child: Container(
+                height: 220,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Colors.black, Colors.transparent],
+                  ),
                 ),
               ),
             ),
@@ -1366,7 +1514,7 @@ class _ReproductorShort extends StatelessWidget {
               child: Row(children: [
                 GestureDetector(
                   onTap: () {
-                    ctrl.pause();
+                    widget.ctrl.pause();
                     Navigator.pop(context);
                   },
                   child: Container(
@@ -1385,21 +1533,15 @@ class _ReproductorShort extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: morado,
+                    color: verde,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: morado.withValues(alpha: 0.5),
-                        blurRadius: 8,
-                      ),
-                    ],
                   ),
                   child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.bolt_rounded, color: blanco, size: 14),
+                    Icon(Icons.bolt_rounded, color: Colors.white, size: 14),
                     SizedBox(width: 4),
                     Text('Short',
                         style: TextStyle(
-                            color: blanco,
+                            color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.w600)),
                   ]),
@@ -1408,69 +1550,155 @@ class _ReproductorShort extends StatelessWidget {
             ),
           ),
 
-          // Info inferior tipo TikTok
+          // ── Botones de control: Pausar y Siguiente ──
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 72, 20),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Info del video
+                    Padding(
+                      padding: const EdgeInsets.only(right: 60),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: verde.withValues(alpha: 0.2),
+                                border: Border.all(
+                                    color: verde.withValues(alpha: 0.5)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(3),
+                                child: Image.asset('assets/logo_sonaris.png',
+                                    fit: BoxFit.contain),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Sonaris Team',
+                                style: TextStyle(
+                                    color: blanco,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700)),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: verde,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text('Seguir',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700)),
+                            ),
+                          ]),
+                          const SizedBox(height: 8),
+                          Text(widget.video.titulo,
+                              style: const TextStyle(
+                                color: blanco,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                height: 1.3,
+                              )),
+                          const SizedBox(height: 4),
+                          Text(widget.video.subtitulo,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 12,
+                              )),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Botones de acción
                     Row(children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: verde.withValues(alpha: 0.2),
-                          border:
-                              Border.all(color: verde.withValues(alpha: 0.5)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Image.asset('assets/logo_sonaris.png',
-                              fit: BoxFit.contain),
+                      // Botón Pausar/Reanudar
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: _togglePausa,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.1)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _pausado
+                                      ? Icons.play_arrow_rounded
+                                      : Icons.pause_rounded,
+                                  color: blanco,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _pausado ? 'Reanudar' : 'Pausar',
+                                  style: const TextStyle(
+                                    color: blanco,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      const Text('Sonaris Team',
-                          style: TextStyle(
-                              color: blanco,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700)),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: verde,
-                          borderRadius: BorderRadius.circular(4),
+                      const SizedBox(width: 10),
+                      // Botón Siguiente
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            widget.ctrl.pause();
+                            if (widget.alSiguiente != null) {
+                              Navigator.pop(context);
+                              widget.alSiguiente!();
+                            } else {
+                              Navigator.pop(context);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: verde,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Siguiente',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(Icons.skip_next_rounded,
+                                    color: Colors.white, size: 20),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: const Text('Seguir',
-                            style: TextStyle(
-                                color: blanco,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700)),
                       ),
                     ]),
-                    const SizedBox(height: 10),
-                    Text(video.titulo,
-                        style: const TextStyle(
-                          color: blanco,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3,
-                        )),
-                    const SizedBox(height: 6),
-                    Text(video.subtitulo,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          fontSize: 13,
-                        )),
                   ],
                 ),
               ),
@@ -1480,7 +1708,7 @@ class _ReproductorShort extends StatelessWidget {
           // Botones laterales tipo TikTok
           Positioned(
             right: 12,
-            bottom: 100,
+            bottom: 180,
             child: SafeArea(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 _BotonLateral(icono: Icons.favorite_rounded, label: 'Me gusta'),
@@ -1522,4 +1750,338 @@ class _BotonLateral extends StatelessWidget {
               fontWeight: FontWeight.w500)),
     ]);
   }
+}
+
+// ── Modal de Afinación de Guitarra ────────────────────────
+// Se muestra al completar el Módulo 1
+
+class _ModalAfinacion extends StatefulWidget {
+  const _ModalAfinacion();
+
+  @override
+  State<_ModalAfinacion> createState() => _EstadoModalAfinacion();
+}
+
+class _EstadoModalAfinacion extends State<_ModalAfinacion>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  int _cuerdaActiva = -1;
+
+  static const _cuerdas = [
+    _CuerdaInfo(nombre: 'E', nota: 'Mi grave', numero: 6, hz: '82 Hz'),
+    _CuerdaInfo(nombre: 'A', nota: 'La', numero: 5, hz: '110 Hz'),
+    _CuerdaInfo(nombre: 'D', nota: 'Re', numero: 4, hz: '147 Hz'),
+    _CuerdaInfo(nombre: 'G', nota: 'Sol', numero: 3, hz: '196 Hz'),
+    _CuerdaInfo(nombre: 'B', nota: 'Si', numero: 2, hz: '247 Hz'),
+    _CuerdaInfo(nombre: 'e', nota: 'Mi agudo', numero: 1, hz: '330 Hz'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        final slide = Tween<Offset>(
+          begin: const Offset(0, 0.3),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+
+        return SlideTransition(
+          position: slide,
+          child: FadeTransition(
+            opacity: CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(top: 80),
+        decoration: const BoxDecoration(
+          color: Color(0xFF121212),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Header con celebración
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    verde.withValues(alpha: 0.12),
+                    verde.withValues(alpha: 0.04),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: verde.withValues(alpha: 0.2)),
+              ),
+              child: Column(children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: verde.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.celebration_rounded,
+                      color: verde, size: 28),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  '¡Módulo 1 completado!',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: blanco,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Antes de continuar, asegúrate de que tu guitarra esté afinada correctamente.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.6),
+                    height: 1.4,
+                  ),
+                ),
+              ]),
+            ),
+            const SizedBox(height: 24),
+
+            // Título sección cuerdas
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Row(children: [
+                Icon(Icons.music_note_rounded, color: verde, size: 18),
+                SizedBox(width: 8),
+                Text(
+                  'Afinación estándar',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: blanco,
+                  ),
+                ),
+                Spacer(),
+                Text(
+                  'E A D G B e',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: verde,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ]),
+            ),
+            const SizedBox(height: 16),
+
+            // Cuerdas interactivas
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: List.generate(_cuerdas.length, (i) {
+                  final cuerda = _cuerdas[i];
+                  final activa = _cuerdaActiva == i;
+                  return GestureDetector(
+                    onTap: () => setState(() =>
+                        _cuerdaActiva = _cuerdaActiva == i ? -1 : i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: activa
+                            ? verde.withValues(alpha: 0.1)
+                            : const Color(0xFF1A1A1A),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: activa
+                              ? verde.withValues(alpha: 0.4)
+                              : Colors.white.withValues(alpha: 0.06),
+                        ),
+                      ),
+                      child: Row(children: [
+                        // Número de cuerda
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: activa
+                                ? verde.withValues(alpha: 0.2)
+                                : Colors.white.withValues(alpha: 0.06),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${cuerda.numero}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: activa ? verde : medio,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        // Nombre de la nota
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                cuerda.nombre,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: activa ? verde : blanco,
+                                ),
+                              ),
+                              Text(
+                                cuerda.nota,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Frecuencia
+                        Text(
+                          cuerda.hz,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: activa
+                                ? verde
+                                : Colors.white.withValues(alpha: 0.4),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Indicador visual de cuerda
+                        Container(
+                          width: 40,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: activa
+                                ? verde
+                                : Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ]),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Tip
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A1A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.lightbulb_outline_rounded,
+                      color: ambar, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Usa un afinador digital o la app GuitarTuna para verificar cada cuerda. Gira las clavijas lentamente.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.6),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Botón continuar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: verde,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    'Listo, continuar',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CuerdaInfo {
+  final String nombre;
+  final String nota;
+  final int numero;
+  final String hz;
+  const _CuerdaInfo({
+    required this.nombre,
+    required this.nota,
+    required this.numero,
+    required this.hz,
+  });
 }

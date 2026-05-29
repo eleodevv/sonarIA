@@ -90,7 +90,7 @@ class _AuthCampoState extends State<AuthCampo> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: _focused ? morado : medio,
+              color: _focused ? verde : medio,
               letterSpacing: 0.2,
             ),
           ),
@@ -103,11 +103,11 @@ class _AuthCampoState extends State<AuthCampo> {
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOut,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: _focused ? 0.12 : 0.07),
+                color: Colors.white.withValues(alpha: _focused ? 0.10 : 0.06),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: _focused
-                      ? morado.withValues(alpha: 0.5)
+                      ? verde.withValues(alpha: 0.4)
                       : Colors.white.withValues(alpha: 0.08),
                 ),
               ),
@@ -117,14 +117,14 @@ class _AuthCampoState extends State<AuthCampo> {
                   controller: widget.controller,
                   obscureText: widget.obscure,
                   keyboardType: widget.teclado,
-                  cursorColor: morado,
+                  cursorColor: verde,
                   style: const TextStyle(
                       color: blanco, fontSize: 16, fontWeight: FontWeight.w500),
                   decoration: InputDecoration(
                     hintText: widget.hint,
                     hintStyle: const TextStyle(color: tenue, fontSize: 15),
                     prefixIcon: Icon(widget.icono,
-                        color: _focused ? morado : medio, size: 20),
+                        color: _focused ? verde : medio, size: 20),
                     suffixIcon: widget.sufijo != null
                         ? Padding(
                             padding: const EdgeInsets.only(right: 8),
@@ -147,7 +147,7 @@ class _AuthCampoState extends State<AuthCampo> {
   }
 }
 
-/// Botón principal con gradiente e icono circular
+/// Botón principal verde
 class AuthBoton extends StatefulWidget {
   final String texto;
   final bool cargando;
@@ -180,10 +180,10 @@ class _AuthBotonState extends State<AuthBoton> {
         curve: Curves.easeOut,
         child: Container(
           width: double.infinity,
-          height: 58,
+          height: 56,
           decoration: BoxDecoration(
-            color: morado,
-            borderRadius: BorderRadius.circular(18),
+            color: verde,
+            borderRadius: BorderRadius.circular(16),
           ),
           child: widget.cargando
               ? const Center(
@@ -191,15 +191,15 @@ class _AuthBotonState extends State<AuthBoton> {
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2.4, color: blanco),
+                        strokeWidth: 2.4, color: Colors.white),
                   ),
                 )
               : Center(
                   child: Text(widget.texto,
                       style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: blanco,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
                           letterSpacing: 0.2)),
                 ),
         ),
@@ -218,9 +218,9 @@ class AuthError extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
-        color: rojo.withValues(alpha: 0.1),
+        color: rojo.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: rojo.withValues(alpha: 0.3)),
+        border: Border.all(color: rojo.withValues(alpha: 0.25)),
       ),
       child: Row(children: [
         const Icon(Icons.error_outline_rounded, color: rojo, size: 19),

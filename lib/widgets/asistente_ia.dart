@@ -62,12 +62,12 @@ class _EstadoChat extends State<_ChatAsistente> {
     {
       'icono': Icons.music_note_rounded,
       'titulo': '¿Cómo practico el acorde F?',
-      'color': Color(0xFF8B5CF6),
+      'color': Color(0xFF7BAF8E),
     },
     {
       'icono': Icons.timeline_rounded,
       'titulo': '¿Qué es una progresión de acordes?',
-      'color': Color(0xFFEC4899),
+      'color': Color(0xFFE8C547),
     },
     {
       'icono': Icons.access_time_rounded,
@@ -213,7 +213,7 @@ class _EstadoChat extends State<_ChatAsistente> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
-                colors: [Color(0xFF6B33FF), morado],
+                colors: [Color(0xFF5A8A6A), morado],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -445,7 +445,7 @@ class _EstadoBurbujaChat extends State<_BurbujaChat>
                     gradient: LinearGradient(
                       colors: m.esError
                           ? [rojo, rojo.withValues(alpha: 0.7)]
-                          : const [Color(0xFF6B33FF), morado],
+                          : const [Color(0xFF5A8A6A), morado],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -539,7 +539,7 @@ class _BurbujaCargando extends StatelessWidget {
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: [Color(0xFF6B33FF), morado],
+              colors: [Color(0xFF5A8A6A), morado],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -905,7 +905,7 @@ class _EstadoBotonEnviar extends State<_BotonEnviar> {
             shape: BoxShape.circle,
             gradient: habilitado
                 ? const LinearGradient(
-                    colors: [Color(0xFF6B33FF), morado],
+                    colors: [Color(0xFF5A8A6A), morado],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
