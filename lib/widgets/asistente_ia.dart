@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constantes/colores.dart';
-import '../services/ia_service.dart';
 
 // ── Botón flotante ────────────────────────────────────────
 
@@ -52,7 +51,6 @@ class _EstadoChat extends State<_ChatAsistente> {
   final _ctrl = TextEditingController();
   final _scroll = ScrollController();
   final _focus = FocusNode();
-  final _ia = IaService();
   final List<_Mensaje> _mensajes = [];
   final List<Map<String, String>> _historial = [];
   bool _cargando = false;
@@ -118,9 +116,10 @@ class _EstadoChat extends State<_ChatAsistente> {
     _scrollAbajo();
 
     try {
-      final respuesta = await _ia.enviarMensaje(_historial, mensaje);
+      await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
       _historial.add({'role': 'user', 'text': mensaje});
+      const respuesta = 'El asistente IA no está disponible en esta versión. Próximamente podrás hacer preguntas sobre acordes y técnica.';
       _historial.add({'role': 'assistant', 'text': respuesta});
       setState(() {
         _mensajes.add(

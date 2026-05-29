@@ -3,7 +3,7 @@ name: Build APK + IPA
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ master, main ]
 
 permissions:
   contents: write
@@ -18,7 +18,7 @@ jobs:
         with:
           channel: 'stable'
       - run: flutter pub get
-      - run: flutter build apk --release
+      - run: flutter build apk --release --android-skip-build-dependency-validation
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -45,6 +45,13 @@ jobs:
       - run: flutter pub get
       - run: pod repo update
         working-directory: ios
+      - name: Disable codesigning in Xcode project
+        run: |
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer"/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = ""/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' '/DEVELOPMENT_TEAM/d' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
       - run: flutter build ios --release --no-codesign
       - name: Create IPA
         run: |
